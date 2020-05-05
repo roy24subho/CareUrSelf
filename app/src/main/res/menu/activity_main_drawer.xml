@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/Appointments"
+            android:icon="@drawable/ic_menu_send"
+            android:title="Appointments" />
+        <item
+            android:id="@+id/Test_Bookings"
+            android:icon="@drawable/ic_menu_manage"
+            android:title="Test Bookings" />
+        <item
+            android:id="@+id/Pharmacy"
+            android:icon="@drawable/ic_menu_slideshow"
+            android:title="Pharmacy" />
+        <item
+            android:id="@+id/Help"
+            android:icon="@drawable/ic_menu_send"
+            android:title="Help" />
+    </group>
+
+    <item android:title="Communicate">
+        <menu>
+            <item
+                android:id="@+id/Contact_Us"
+                android:icon="@drawable/ic_menu_gallery"
+                android:title="Contact Us" />
+
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/Settings"
+        android:icon="@drawable/ic_menu_send"
+        android:title="Settings" />
+
+    <item
+        android:id="@+id/Logout"
+        android:icon="@drawable/ic_menu_send"
+        android:title="Logout" />
+
+</menu>
