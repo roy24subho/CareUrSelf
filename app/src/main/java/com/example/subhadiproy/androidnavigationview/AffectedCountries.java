@@ -2,6 +2,8 @@ package com.example.subhadiproy.androidnavigationview;
 
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -44,41 +46,50 @@ public class AffectedCountries extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_affected_countries);
 
-        edtSearch =(EditText) findViewById(R.id.edtSearch);
-        listView =(ListView) findViewById(R.id.listView);
-        simpleArcLoader =(SimpleArcLoader) findViewById(R.id.loaderafc);
+        try {
 
-        getSupportActionBar().setTitle("Affected Countries");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+            edtSearch = (EditText) findViewById(R.id.edtSearch);
+            listView = (ListView) findViewById(R.id.listView);
+            simpleArcLoader = (SimpleArcLoader) findViewById(R.id.loaderafc);
 
-        countryModelsList.clear();
+            getSupportActionBar().setTitle("Affected Countries");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        fetchData();
+            countryModelsList.clear();
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startActivity(new Intent(getApplicationContext(),DetailActivity.class).putExtra("position",position));
-            }
-        });
+            fetchData();
 
-        edtSearch.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                myCustomAdapter.getFilter().filter(s);
-                myCustomAdapter.notifyDataSetChanged();
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    startActivity(new Intent(getApplicationContext(), DetailActivity.class).putExtra("position", position));
+                }
+            });
 
-        });
+            edtSearch.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
 
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    myCustomAdapter.getFilter().filter(s);
+                    myCustomAdapter.notifyDataSetChanged();
+                }
 
+                @Override
+                public void afterTextChanged(Editable s) {
+                }
+
+            });
+        }
+        catch (Exception e){
+
+            e.printStackTrace();
+            Toast.makeText(AffectedCountries.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+
+        }
     }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
@@ -88,60 +99,65 @@ public class AffectedCountries extends AppCompatActivity {
     }
 
     private void fetchData() {
-        String url  = "https://corona.lmao.ninja/v2/countries/";
-        simpleArcLoader.start();
+        try {
+            String url = "https://corona.lmao.ninja/v2/countries/";
+            simpleArcLoader.start();
 
-        StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONArray jsonArray = new JSONArray(response);
-                    for (int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+            StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONArray jsonArray = new JSONArray(response);
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            JSONObject jsonObject = jsonArray.getJSONObject(i);
 
-                        String countryName = jsonObject.getString("country");
-                        String cases = jsonObject.getString("cases");
-                        String todayCases = jsonObject.getString("todayCases");
-                        String deaths = jsonObject.getString("deaths");
-                        String todayDeaths = jsonObject.getString("todayDeaths");
-                        String recovered = jsonObject.getString("recovered");
-                        String active = jsonObject.getString("active");
-                        String critical = jsonObject.getString("critical");
+                            String countryName = jsonObject.getString("country");
+                            String cases = jsonObject.getString("cases");
+                            String todayCases = jsonObject.getString("todayCases");
+                            String deaths = jsonObject.getString("deaths");
+                            String todayDeaths = jsonObject.getString("todayDeaths");
+                            String recovered = jsonObject.getString("recovered");
+                            String active = jsonObject.getString("active");
+                            String critical = jsonObject.getString("critical");
 
-                        JSONObject object = jsonObject.getJSONObject("countryInfo");
-                        String flagUrl = object.getString("flag");
+                            JSONObject object = jsonObject.getJSONObject("countryInfo");
+                            String flagUrl = object.getString("flag");
 
 
-                        countryModel = new CountryModel(flagUrl, countryName, cases, todayCases, deaths, todayDeaths, recovered, active, critical);
+                            countryModel = new CountryModel(flagUrl, countryName, cases, todayCases, deaths, todayDeaths, recovered, active, critical);
 
-                        countryModelsList.add(countryModel);
+                            countryModelsList.add(countryModel);
+                        }
+                        myCustomAdapter = new MyCustomAdapter(AffectedCountries.this, countryModelsList);
+                        listView.setAdapter(myCustomAdapter);
+                        simpleArcLoader.stop();
+                        simpleArcLoader.setVisibility(View.GONE);
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        simpleArcLoader.stop();
+                        simpleArcLoader.setVisibility(View.GONE);
                     }
-                    myCustomAdapter = new MyCustomAdapter(AffectedCountries.this, countryModelsList);
-                    listView.setAdapter(myCustomAdapter);
-                    simpleArcLoader.stop();
-                    simpleArcLoader.setVisibility(View.GONE);
-
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    simpleArcLoader.stop();
-                    simpleArcLoader.setVisibility(View.GONE);
                 }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                simpleArcLoader.stop();
-                simpleArcLoader.setVisibility(View.GONE);
-                Toast.makeText(AffectedCountries.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    simpleArcLoader.stop();
+                    simpleArcLoader.setVisibility(View.GONE);
+                    Toast.makeText(AffectedCountries.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+                }
+            });
 
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        requestQueue.add(request);
+            RequestQueue requestQueue = Volley.newRequestQueue(this);
+            requestQueue.add(request);
 
+        }
+        catch (Exception e){
 
+            e.printStackTrace();
+            Toast.makeText(AffectedCountries.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
 
-
-
+        }
     }
+
 }

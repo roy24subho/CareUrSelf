@@ -1,6 +1,8 @@
 package com.example.subhadiproy.androidnavigationview;
 
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -42,46 +44,56 @@ public class AffectedStates extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_affected_states);
-        edtSearchState = (EditText) findViewById(R.id.edtSearchState);
-        listViewState =(ListView) findViewById(R.id.listViewState);
-        simpleArcLoaderState = findViewById(R.id.loaderafs);
 
-        getSupportActionBar().setTitle("Affected States");
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        getSupportActionBar().setDisplayShowHomeEnabled(true);
+        try {
 
-        stateModelsList.clear();
+            edtSearchState = (EditText) findViewById(R.id.edtSearchState);
+            listViewState = (ListView) findViewById(R.id.listViewState);
+            simpleArcLoaderState = findViewById(R.id.loaderafs);
 
-        parse();
+            getSupportActionBar().setTitle("Affected States");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        listViewState.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                startActivity(new Intent(getApplicationContext(),DetailedStateActivity.class).putExtra("position",position));
+                stateModelsList.clear();
+
+                parse();
+
+                listViewState.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        startActivity(new Intent(getApplicationContext(), DetailedStateActivity.class).putExtra("position", position));
+                    }
+                });
+                edtSearchState.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                        if (myCustomAdapterState != null) {
+                            myCustomAdapterState.getFilter().filter(s);
+                            myCustomAdapterState.notifyDataSetInvalidated();
+                            myCustomAdapterState.notifyDataSetChanged();
+                        }
+
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                    }
+
+                });
+
             }
-        });
-        edtSearchState.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                if(myCustomAdapterState!=null){
-                    myCustomAdapterState.getFilter().filter(s);
-                    myCustomAdapterState.notifyDataSetInvalidated();
-                    myCustomAdapterState.notifyDataSetChanged();
-                }
+        catch (Exception e){
 
-            }
-            @Override
-            public void afterTextChanged(Editable s) {
-            }
+            e.printStackTrace();
+            Toast.makeText(AffectedStates.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
 
-        });
-
-
+        }
     }
-
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if(item.getItemId()==android.R.id.home)
@@ -90,54 +102,61 @@ public class AffectedStates extends AppCompatActivity {
     }
 
     private void parse() {
-        String url = "https://api.covid19india.org/data.json";
-        simpleArcLoaderState.start();
+        try {
+            String url = "https://api.covid19india.org/data.json";
+            simpleArcLoaderState.start();
 
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
-                try {
-                    JSONObject jsonObject = new JSONObject(response);
-                    JSONArray jsonArray = jsonObject.getJSONArray("statewise");
-                    JSONObject jobject;
-                    for (int i = 1; i < jsonArray.length(); i++){
-                        jobject = jsonArray.getJSONObject(i);
+            StringRequest stringRequest = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
+                    try {
+                        JSONObject jsonObject = new JSONObject(response);
+                        JSONArray jsonArray = jsonObject.getJSONArray("statewise");
+                        JSONObject jobject;
+                        for (int i = 1; i < jsonArray.length(); i++) {
+                            jobject = jsonArray.getJSONObject(i);
 
-                        String active = jobject.getString("active");
-                        String confirmed = jobject.getString("confirmed");
-                        String deaths = jobject.getString("deaths");
-                        String lastupdatedtime = jobject.getString("lastupdatedtime");
-                        String recovered = jobject.getString("recovered");
-                        String state = jobject.getString("state");
-                        String statecode = jobject.getString("statecode");
+                            String active = jobject.getString("active");
+                            String confirmed = jobject.getString("confirmed");
+                            String deaths = jobject.getString("deaths");
+                            String lastupdatedtime = jobject.getString("lastupdatedtime");
+                            String recovered = jobject.getString("recovered");
+                            String state = jobject.getString("state");
+                            String statecode = jobject.getString("statecode");
 
-                        stateModel = new StateModel(statecode,lastupdatedtime,state,active,confirmed,deaths,recovered);
-                        stateModelsList.add(stateModel);
+                            stateModel = new StateModel(statecode, lastupdatedtime, state, active, confirmed, deaths, recovered);
+                            stateModelsList.add(stateModel);
+                        }
+                        myCustomAdapterState = new MyCustomAdapterState(AffectedStates.this, stateModelsList);
+                        listViewState.setAdapter(myCustomAdapterState);
+                        simpleArcLoaderState.stop();
+                        simpleArcLoaderState.setVisibility(View.GONE);
+                    } catch (JSONException e) {
+                        Log.e("JSON Error", e.getMessage());
+                        simpleArcLoaderState.stop();
+                        simpleArcLoaderState.setVisibility(View.GONE);
                     }
-                    myCustomAdapterState = new MyCustomAdapterState(AffectedStates.this , stateModelsList);
-                    listViewState.setAdapter(myCustomAdapterState);
-                    simpleArcLoaderState.stop();
-                    simpleArcLoaderState.setVisibility(View.GONE);
-                } catch (JSONException e) {
-                    Log.e("JSON Error",e.getMessage());
-                    simpleArcLoaderState.stop();
-                    simpleArcLoaderState.setVisibility(View.GONE);
+
                 }
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    simpleArcLoaderState.stop();
+                    simpleArcLoaderState.setVisibility(View.GONE);
+                    Toast.makeText(AffectedStates.this, "No Internet Connection!!", Toast.LENGTH_LONG).show();
 
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                simpleArcLoaderState.stop();
-                simpleArcLoaderState.setVisibility(View.GONE);
-                Toast.makeText(AffectedStates.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+            RequestQueue requestQueue = Volley.newRequestQueue(this);
+            requestQueue.add(stringRequest);
+        }
+        catch (Exception e){
 
-            }
-        });
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        requestQueue.add(stringRequest);
+            e.printStackTrace();
+            Toast.makeText(AffectedStates.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+
+        }
     }
-
 
 }
 

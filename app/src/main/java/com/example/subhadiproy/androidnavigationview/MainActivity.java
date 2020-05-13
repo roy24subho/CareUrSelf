@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.view.ViewPager;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -16,22 +18,24 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.Toast;
+
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    ViewPager viewPager;
+    CustomSwipeAdapter adapter;
+    int CurrentPageCounter;
+    private int[] image_resources = {R.drawable.covid19_banner,R.drawable.news_banner};
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        /*ImageView doctorhome = (ImageView) findViewById(R.id.doctorhomeimg);
-        ImageView hospitalhome = (ImageView) findViewById(R.id.hospitalhomeimg);
-        ImageView pharmacyhome = (ImageView) findViewById(R.id.pharmacyhomeimg);
-        ImageView symptomshome = (ImageView) findViewById(R.id.symptomshomeimg); */
-
-        ImageView covid19_tracker = findViewById(R.id.covid19_tracker);
 
         setSupportActionBar(toolbar);
 
@@ -62,21 +66,30 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        covid19_tracker.setOnClickListener(new View.OnClickListener() {
+        viewPager = (ViewPager) findViewById(R.id.view_pager);
+        adapter = new CustomSwipeAdapter(this);
+        viewPager.setAdapter(adapter);
+
+        final Handler handler = new Handler();
+        final Runnable update = new Runnable() {
             @Override
-            public void onClick(View v) {
-                if (!haveNetwork()) {
+            public void run() {
+                if(CurrentPageCounter == image_resources.length){
 
-                    Toast.makeText(MainActivity.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
-
-                }
-                else {
-
-                    startActivity(new Intent(MainActivity.this, MainActivity_covid19.class));
+                    CurrentPageCounter = 0;
 
                 }
+                viewPager.setCurrentItem(CurrentPageCounter++,true);
             }
-        });
+        };
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                handler.post(update);
+            }
+        }, 2500,2500);
         
     }
 
@@ -160,4 +173,9 @@ public class MainActivity extends AppCompatActivity
 
         return have_MobileData||have_WIFI;
     }
+
+
 }
+/*
+
+        */

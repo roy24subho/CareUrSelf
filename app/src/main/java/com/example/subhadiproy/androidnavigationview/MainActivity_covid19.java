@@ -38,100 +38,118 @@ public class MainActivity_covid19 extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_covid19);
 
-        tvCases =(TextView) findViewById(R.id.tvCases);
-        tvRecovered =(TextView) findViewById(R.id.tvRecovered);
-        tvCritical =(TextView) findViewById(R.id.tvCritical);
-        tvActive =(TextView) findViewById(R.id.tvActive);
-        tvTodayCases =(TextView) findViewById(R.id.tvTodayCases);
-        tvTotalDeaths =(TextView) findViewById(R.id.tvTotalDeaths);
-        tvTodayDeaths =(TextView) findViewById(R.id.tvTodayDeaths);
-        tvAffectedCountries =(TextView) findViewById(R.id.tvAffectedCountries);
+        try {
 
-        trackCountries = (Button) findViewById(R.id.track_btn);
-        trackStates = (Button) findViewById(R.id.track_btn_state);
+            tvCases = (TextView) findViewById(R.id.tvCases);
+            tvRecovered = (TextView) findViewById(R.id.tvRecovered);
+            tvCritical = (TextView) findViewById(R.id.tvCritical);
+            tvActive = (TextView) findViewById(R.id.tvActive);
+            tvTodayCases = (TextView) findViewById(R.id.tvTodayCases);
+            tvTotalDeaths = (TextView) findViewById(R.id.tvTotalDeaths);
+            tvTodayDeaths = (TextView) findViewById(R.id.tvTodayDeaths);
+            tvAffectedCountries = (TextView) findViewById(R.id.tvAffectedCountries);
 
-        simpleArcLoader =(SimpleArcLoader) findViewById(R.id.loader);
-        scrollView =(ScrollView) findViewById(R.id.scrollStats);
-        pieChart =(PieChart) findViewById(R.id.piechart);
+            trackCountries = (Button) findViewById(R.id.track_btn);
+            trackStates = (Button) findViewById(R.id.track_btn_state);
+
+            simpleArcLoader = (SimpleArcLoader) findViewById(R.id.loader);
+            scrollView = (ScrollView) findViewById(R.id.scrollStats);
+            pieChart = (PieChart) findViewById(R.id.piechart);
 
 
+            trackStates.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (!haveNetwork()) {
 
-        trackStates.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!haveNetwork()) {
+                        Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
 
-                    Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+                    } else {
 
-                } else {
-
-                    startActivity(new Intent(MainActivity_covid19.this, AffectedStates.class));
+                        startActivity(new Intent(MainActivity_covid19.this, AffectedStates.class));
+                    }
                 }
-            }
-        });
+            });
 
-        trackCountries.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!haveNetwork()) {
+            trackCountries.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
 
-                    Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+                    if (!haveNetwork()) {
 
-                } else {
+                        Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
 
-                    startActivity(new Intent(MainActivity_covid19.this, AffectedCountries.class));
+                    } else {
+
+                        startActivity(new Intent(MainActivity_covid19.this, AffectedCountries.class));
+                    }
                 }
-            }
-        });
-        fetchData();
+            });
+            fetchData();
+        }
+        catch (Exception e){
+
+            e.printStackTrace();
+            Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+
+        }
     }
-    private void fetchData(){
-        String url = "https://corona.lmao.ninja/v2/all/";
-        simpleArcLoader.start();
-        StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
-            @Override
-            public void onResponse(String response) {
+    private void fetchData() {
+        try {
+            String url = "https://corona.lmao.ninja/v2/all/";
+            simpleArcLoader.start();
+            StringRequest request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>() {
+                @Override
+                public void onResponse(String response) {
 
-                try {
-                    JSONObject jsonObject = new JSONObject(response.toString());
+                    try {
+                        JSONObject jsonObject = new JSONObject(response.toString());
 
-                    tvCases.setText(jsonObject.getString("cases"));
-                    tvRecovered.setText(jsonObject.getString("recovered"));
-                    tvCritical.setText(jsonObject.getString("critical"));
-                    tvActive.setText(jsonObject.getString("active"));
-                    tvTodayCases.setText(jsonObject.getString("todayCases"));
-                    tvTotalDeaths.setText(jsonObject.getString("deaths"));
-                    tvTodayDeaths.setText(jsonObject.getString("todayDeaths"));
-                    tvAffectedCountries.setText(jsonObject.getString("affectedCountries"));
+                        tvCases.setText(jsonObject.getString("cases"));
+                        tvRecovered.setText(jsonObject.getString("recovered"));
+                        tvCritical.setText(jsonObject.getString("critical"));
+                        tvActive.setText(jsonObject.getString("active"));
+                        tvTodayCases.setText(jsonObject.getString("todayCases"));
+                        tvTotalDeaths.setText(jsonObject.getString("deaths"));
+                        tvTodayDeaths.setText(jsonObject.getString("todayDeaths"));
+                        tvAffectedCountries.setText(jsonObject.getString("affectedCountries"));
 
-                    pieChart.addPieSlice(new PieModel("Active",Integer.parseInt(tvActive.getText().toString()), Color.parseColor("#01b7ff")));
-                    pieChart.addPieSlice(new PieModel("Recoverd",Integer.parseInt(tvRecovered.getText().toString()), Color.parseColor("#00ff0c")));
-                    pieChart.addPieSlice(new PieModel("Deaths",Integer.parseInt(tvTotalDeaths.getText().toString()), Color.parseColor("#ff0500")));
+                        pieChart.addPieSlice(new PieModel("Active", Integer.parseInt(tvActive.getText().toString()), Color.parseColor("#01b7ff")));
+                        pieChart.addPieSlice(new PieModel("Recoverd", Integer.parseInt(tvRecovered.getText().toString()), Color.parseColor("#00ff0c")));
+                        pieChart.addPieSlice(new PieModel("Deaths", Integer.parseInt(tvTotalDeaths.getText().toString()), Color.parseColor("#ff0500")));
 
-                    pieChart.startAnimation();
+                        pieChart.startAnimation();
 
-                    simpleArcLoader.stop();
-                    simpleArcLoader.setVisibility(View.GONE);
-                    scrollView.setVisibility(View.VISIBLE);
+                        simpleArcLoader.stop();
+                        simpleArcLoader.setVisibility(View.GONE);
+                        scrollView.setVisibility(View.VISIBLE);
 
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    simpleArcLoader.stop();
-                    simpleArcLoader.setVisibility(View.GONE);
-                    scrollView.setVisibility(View.VISIBLE);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        simpleArcLoader.stop();
+                        simpleArcLoader.setVisibility(View.GONE);
+                        scrollView.setVisibility(View.VISIBLE);
+                    }
                 }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                simpleArcLoader.stop();
-                simpleArcLoader.setVisibility(View.GONE);
-                scrollView.setVisibility(View.VISIBLE);
-                Toast.makeText(MainActivity_covid19.this, error.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-        RequestQueue requestQueue = Volley.newRequestQueue(this);
-        requestQueue.add(request);
+            }, new Response.ErrorListener() {
+                @Override
+                public void onErrorResponse(VolleyError error) {
+                    simpleArcLoader.stop();
+                    simpleArcLoader.setVisibility(View.GONE);
+                    scrollView.setVisibility(View.VISIBLE);
+                    Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+                }
+            });
+            RequestQueue requestQueue = Volley.newRequestQueue(this);
+            requestQueue.add(request);
+
+        }
+        catch (Exception e){
+
+            e.printStackTrace();
+            Toast.makeText(MainActivity_covid19.this, "No Internet Connection!!", Toast.LENGTH_SHORT).show();
+
+        }
 
     }
 
